@@ -7,15 +7,17 @@
 namespace esphome {
 namespace rika_gsm {
 class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
-public:
-    void update() override;
-    void loop() override;
-    void dump_config() override;
-    void set_pin(std::string);
-    void set_time(time::RealTimeClock *);
-protected:
-    std::string pin_;
-    time::RealTimeClock *time_;
+ public:
+  void update() override;
+  void loop() override;
+  void dump_config() override;
+
+  void set_pin(std::string);
+  void set_time(time::RealTimeClock *);
+
+ protected:
+  std::string pin_;
+  time::RealTimeClock *time_;
 };
-} // end namespace rika_gsm
-} // end namespace esphome
+}  // end namespace rika_gsm
+}  // end namespace esphome

@@ -6,18 +6,40 @@
 
 namespace esphome {
 namespace rika_gsm {
+
+const uint16_t RIKA_GSM_READ_BUFFER_LENGTH = 1024;
+
+enum State {
+    STATE_INIT = 0,
+    STATE_STOVE_READ,
+    STATE_STOVE_SEND,
+};
+
 class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
  public:
   void update() override;
   void loop() override;
   void dump_config() override;
 
-  void set_pin(std::string);
+  void send_sms(std::string const &message);
+  void set_pin(std::string const &);
   void set_time(time::RealTimeClock *);
-
+  void set_phone_number(std::string const &);
  protected:
+  State state_{State::STATE_INIT};
   std::string pin_;
+  std::string phone_number_;
   time::RealTimeClock *time_;
+  std::string outgoing_message_;
+  bool send_pending_;
+  std::string stove_request_;
+  bool stove_request_complete_{false};
+
+  void parse_stove_request();
+  void send_ok();
+  void send_carriage_return();
+  void send_query();
+  void reset_pending_query();
 };
 }  // end namespace rika_gsm
 }  // end namespace esphome

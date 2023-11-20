@@ -39,3 +39,4 @@ uart:
 rika_gsm:
   id: ria_gsm_component_1
   pin: "1234"
+  # phone_number: "+33685967412"

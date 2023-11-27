@@ -10,9 +10,9 @@ namespace rika_gsm {
 const uint16_t RIKA_GSM_READ_BUFFER_LENGTH = 1024;
 
 enum State {
-    STATE_INIT = 0,
-    STATE_STOVE_READ,
-    STATE_STOVE_SEND,
+  STATE_INIT = 0,
+  STATE_STOVE_READ,
+  STATE_STOVE_SEND,
 };
 
 class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
@@ -25,6 +25,7 @@ class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
   void set_pin(std::string const &);
   void set_time(time::RealTimeClock *);
   void set_phone_number(std::string const &);
+
  protected:
   State state_{State::STATE_INIT};
   std::string pin_;
@@ -41,5 +42,20 @@ class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
   void send_query();
   void reset_pending_query();
 };
+
+template<typename... Ts> class RikaGsmSendCommandAction : public Action<Ts...> {
+ public:
+  RikaGsmSendCommandAction(RikaGSMComponent *parent) : parent_(parent) {}
+  TEMPLATABLE_VALUE(std::string, command)
+
+  void play(Ts... x) {
+    auto command = this->command_.value(x...);
+    this->parent_->send_sms(command);
+  }
+
+ protected:
+  RikaGSMComponent *parent_;
+};
+
 }  // end namespace rika_gsm
 }  // end namespace esphome

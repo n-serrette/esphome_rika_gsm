@@ -17,10 +17,6 @@ wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
 
-api:
-  encryption:
-    key: !secret api_encryption_key
-
 # At least one time source is required
 time:
   - platform: homeassistant
@@ -40,3 +36,16 @@ rika_gsm:
   id: ria_gsm_component_1
   pin: "1234"
   # phone_number: "+33685967412"
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+  services:
+      - service: turn_on
+        then:
+          - rika_gsm.send_command:
+              command: "ON"
+      - service: turn_off
+        then:
+          - rika_gsm.send_command:
+              command: "OFF"

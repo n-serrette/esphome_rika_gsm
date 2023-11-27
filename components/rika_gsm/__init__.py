@@ -1,4 +1,5 @@
 import re
+from esphome import automation
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import uart, time
@@ -10,12 +11,16 @@ from esphome.const import (
 
 DEPENDENCIES = ['uart']
 
-CONF_PHONE_NUMBER = "phone_number";
+CONF_PHONE_NUMBER = "phone_number"
+CONF_COMMAND = "command"
 
 DEFAULT_PHONE_NUMBER = "+33685967412"
 
 rika_gsm_component_ns = cg.esphome_ns.namespace('rika_gsm')
 RikaGSMComponent = rika_gsm_component_ns.class_('RikaGSMComponent', cg.Component)
+
+# Action
+RikaGsmSendCommandAction = rika_gsm_component_ns.class_("RikaGsmSendCommandAction", automation.Action)
 
 STOVE_PIN_REGEX = re.compile('^\d{4}$')
 PHONE_NUMBER_REGEX = re.compile('^\+[1-9]{1}[0-9]{3,14}$')
@@ -51,3 +56,21 @@ async def to_code(config):
     cg.add(var.set_phone_number(config[CONF_PHONE_NUMBER]))
     cg.register_component(var, config)
     uart.register_uart_device(var, config)
+
+
+RIKA_GSM_SEND_COMMAND_SCHEMA = cv.Schema(
+    {
+        cv.GenerateID(): cv.use_id(RikaGSMComponent),
+        cv.Required(CONF_COMMAND): cv.templatable(cv.string_strict),
+    }
+)
+
+@automation.register_action(
+    "rika_gsm.send_command", RikaGsmSendCommandAction, RIKA_GSM_SEND_COMMAND_SCHEMA
+)
+async def rika_gsm_send_command_to_code(config, action_id, template_arg, args):
+    parent = await cg.get_variable(config[CONF_ID])
+    var = cg.new_Pvariable(action_id, template_arg, parent)
+    template_ = await cg.templatable(config[CONF_COMMAND], args, cg.std_string)
+    cg.add(var.set_command(template_))
+    return var

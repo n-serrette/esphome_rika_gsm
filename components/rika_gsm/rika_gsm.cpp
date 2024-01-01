@@ -13,6 +13,13 @@ const uint8_t ASCII_SUB = 0x1A;
 void RikaGSMComponent::update() {}
 
 void RikaGSMComponent::loop() {
+  // check state
+  ESP_LOGW(TAG, "State: %d", this->state_);
+  if (this->state_ == State::STATE_INIT) {
+    this->reset_stove_request();
+    this->state_ = State::AWAIT_STOVE_REQUEST;
+  }
+
   // read bytes
   while (this->available()) {
     uint8_t byte;
@@ -43,6 +50,13 @@ void RikaGSMComponent::parse_stove_request() {
   if (!this->stove_request_complete_)
     return;
 
+  if (this->state_ == State::AWAIT_STOVE_REPLY) {
+    ESP_LOGW(TAG, "Stove Reply: %s", this->stove_request_.c_str());
+    this->state_ = State::STATE_INIT;
+    return;
+  }
+    ESP_LOGW(TAG, "Stove Request: %s", this->stove_request_.c_str());
+
   if (esphome::str_startswith(this->stove_request_, "AT+CMGR")) {  // the stove wants to read an sms
     this->state_ = State::STATE_STOVE_READ;
     ESP_LOGW(TAG, "Stove Request: Read sms");
@@ -56,7 +70,7 @@ void RikaGSMComponent::parse_stove_request() {
     ESP_LOGV(TAG, "\t writing sms: %s", this->outgoing_message_.c_str());
     this->send_query();
     this->reset_pending_query();
-    this->state_ = State::STATE_INIT;
+    this->state_ = State::AWAIT_STOVE_REPLY;
     return;
   }
   if (esphome::str_startswith(this->stove_request_, "AT+CMGD")) {  // the stove wants to delete the SMS
@@ -104,5 +118,9 @@ void RikaGSMComponent::reset_pending_query() {
   this->send_pending_ = false;
 }
 
+void RikaGSMComponent::reset_stove_request() {
+  this->stove_request_ = "";
+  this->stove_request_complete_ = false;
+}
 }  // end namespace rika_gsm
 }  // end namespace esphome

@@ -7,13 +7,7 @@
 namespace esphome {
 namespace rika_gsm {
 
-const uint16_t RIKA_GSM_READ_BUFFER_LENGTH = 1024;
-
-enum State {
-  STATE_INIT = 0,
-  STATE_STOVE_READ,
-  STATE_STOVE_SEND,
-};
+enum State { STATE_INIT = 0, STATE_STOVE_READ, STATE_STOVE_SEND, AWAIT_STOVE_REQUEST, AWAIT_STOVE_REPLY };
 
 class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
  public:
@@ -41,6 +35,7 @@ class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
   void send_carriage_return();
   void send_query();
   void reset_pending_query();
+  void reset_stove_request();
 };
 
 template<typename... Ts> class RikaGsmSendCommandAction : public Action<Ts...> {

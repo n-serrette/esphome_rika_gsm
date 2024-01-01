@@ -54,8 +54,8 @@ async def to_code(config):
     cg.add(var.set_time(time_))
     cg.add(var.set_pin(config[CONF_PIN]))
     cg.add(var.set_phone_number(config[CONF_PHONE_NUMBER]))
-    cg.register_component(var, config)
-    uart.register_uart_device(var, config)
+    await cg.register_component(var, config)
+    await uart.register_uart_device(var, config)
 
 
 RIKA_GSM_SEND_COMMAND_SCHEMA = cv.Schema(

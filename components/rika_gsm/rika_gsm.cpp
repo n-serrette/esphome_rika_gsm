@@ -14,17 +14,18 @@ void RikaGSMComponent::update() {}
 
 void RikaGSMComponent::loop() {
   // check state
-  ESP_LOGW(TAG, "State: %d", this->state_);
   if (this->state_ == State::STATE_INIT) {
     this->reset_stove_request();
     this->state_ = State::AWAIT_STOVE_REQUEST;
+    ESP_LOGW(TAG, "State: %d", this->state_);
   }
 
   // read bytes
   while (this->available()) {
     uint8_t byte;
     this->read_byte(&byte);
-    this->stove_request_ += byte;
+    this->stove_request_ += (char)byte;
+    ESP_LOGW(TAG, "Acumulated Request: '%s'", this->stove_request_);
 
     if ((byte == '\n') || (byte == ASCII_SUB) || (byte == ASCII_CR)) {
       this->stove_request_complete_ = true;

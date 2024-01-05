@@ -22,16 +22,19 @@ void RikaGSMComponent::loop() {
 
   // read bytes
   while (this->available()) {
-    uint8_t byte;
-    this->read_byte(&byte);
-    this->stove_request_ += (char)byte;
-    ESP_LOGW(TAG, "Acumulated Request: '%s'", this->stove_request_);
+    char byte = this->read();
+
+    this->stove_request_ += byte;
 
     if ((byte == '\n') || (byte == ASCII_SUB) || (byte == ASCII_CR)) {
       this->stove_request_complete_ = true;
       break;
     }
   }
+  if (this->stove_request_.size() > 0)
+    ESP_LOGW(TAG, "Acumulated Request: '%s' at end %d", this->stove_request_.c_str(), this->stove_request_complete_);
+
+  this->parse_stove_request();
 }
 
 void RikaGSMComponent::dump_config() {}
@@ -66,6 +69,7 @@ void RikaGSMComponent::parse_stove_request() {
       this->send_carriage_return();
       this->send_ok();
       this->state_ = State::STATE_INIT;
+      return;
     }
 
     ESP_LOGV(TAG, "\t writing sms: %s", this->outgoing_message_.c_str());
@@ -78,6 +82,7 @@ void RikaGSMComponent::parse_stove_request() {
     ESP_LOGW(TAG, "Stove Request: Delete sms");
     this->reset_pending_query();
     this->send_ok();
+    this->state_ = State::STATE_INIT;
     return;
   }
   if (esphome::str_startswith(this->stove_request_, "ATE0") ||
@@ -85,7 +90,11 @@ void RikaGSMComponent::parse_stove_request() {
       esphome::str_startswith(this->stove_request_, "AT+CMGF")) {  // configuration request
     ESP_LOGW(TAG, "Stove Request: configuration\n\t %s", this->stove_request_.c_str());
     this->send_ok();
+    this->state_ = State::STATE_INIT;
+    return;
   }
+  this->state_ = State::STATE_INIT;
+
 }
 
 void RikaGSMComponent::send_ok() {

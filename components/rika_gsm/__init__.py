@@ -11,6 +11,7 @@ from esphome.const import (
 
 DEPENDENCIES = ['uart']
 
+CONF_RIKA_GSM_ID = "rika_gsm_id"
 CONF_PHONE_NUMBER = "phone_number"
 CONF_COMMAND = "command"
 

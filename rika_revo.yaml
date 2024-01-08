@@ -37,6 +37,11 @@ rika_gsm:
   pin: "1234"
   # phone_number: "+33685967412"
 
+text_sensor:
+  - platform: rika_gsm
+    raw_status:
+      name: "Stove raw status"
+
 api:
   encryption:
     key: !secret api_encryption_key
@@ -49,3 +54,9 @@ api:
         then:
           - rika_gsm.send_command:
               command: "OFF"
+      - service: send_command
+        variables:
+          command: string
+        then:
+          - rika_gsm.send_command:
+              command: !lambda 'return command;'

@@ -1,5 +1,6 @@
 #include "esphome/core/log.h"
 #include "esphome/core/helpers.h"
+
 #include "rika_gsm.h"
 
 namespace esphome {
@@ -17,7 +18,7 @@ void RikaGSMComponent::loop() {
   if (this->state_ == State::STATE_INIT) {
     this->reset_stove_request();
     this->state_ = State::AWAIT_STOVE_REQUEST;
-    ESP_LOGW(TAG, "State: %d", this->state_);
+    ESP_LOGV(TAG, "State: %d", this->state_);
   }
 
   // read bytes
@@ -26,13 +27,11 @@ void RikaGSMComponent::loop() {
 
     this->stove_request_ += byte;
 
-    if ((byte == '\n') || (byte == ASCII_SUB) || (byte == ASCII_CR)) {
+    if ((byte == ASCII_LF) || (byte == ASCII_SUB) || (byte == ASCII_CR)) {
       this->stove_request_complete_ = true;
       break;
     }
   }
-  if (this->stove_request_.size() > 0)
-    ESP_LOGW(TAG, "Acumulated Request: '%s' at end %d", this->stove_request_.c_str(), this->stove_request_complete_);
 
   this->parse_stove_request();
 }
@@ -50,22 +49,30 @@ void RikaGSMComponent::set_phone_number(std::string const &number) { this->phone
 
 void RikaGSMComponent::set_time(time::RealTimeClock *time) { this->time_ = time; }
 
+void RikaGSMComponent::set_raw_status_sensor(text_sensor::TextSensor * raw_sensor) {
+  this->raw_status_sensor_ = raw_sensor;
+}
+
 void RikaGSMComponent::parse_stove_request() {
   if (!this->stove_request_complete_)
     return;
 
   if (this->state_ == State::AWAIT_STOVE_REPLY) {
-    ESP_LOGW(TAG, "Stove Reply: %s", this->stove_request_.c_str());
+    ESP_LOGI(TAG, "Stove Reply: %s", this->stove_request_.c_str());
+    this->raw_stove_status_ = this->stove_request_;
+    if (this->raw_status_sensor_ != nullptr) {
+      this->raw_status_sensor_->publish_state(this->raw_stove_status_);
+    }
     this->state_ = State::STATE_INIT;
     return;
   }
-    ESP_LOGW(TAG, "Stove Request: %s", this->stove_request_.c_str());
+    ESP_LOGI(TAG, "Stove Request: %s", this->stove_request_.c_str());
 
   if (esphome::str_startswith(this->stove_request_, "AT+CMGR")) {  // the stove wants to read an sms
     this->state_ = State::STATE_STOVE_READ;
-    ESP_LOGW(TAG, "Stove Request: Read sms");
+    ESP_LOGV(TAG, "Stove Request: Read sms");
     if (!this->send_pending_ || this->outgoing_message_.size() == 0) {
-      ESP_LOGW(TAG, "\t nothing to read");
+      ESP_LOGV(TAG, "\t nothing to read");
       this->send_carriage_return();
       this->send_ok();
       this->state_ = State::STATE_INIT;
@@ -79,7 +86,7 @@ void RikaGSMComponent::parse_stove_request() {
     return;
   }
   if (esphome::str_startswith(this->stove_request_, "AT+CMGD")) {  // the stove wants to delete the SMS
-    ESP_LOGW(TAG, "Stove Request: Delete sms");
+    ESP_LOGV(TAG, "Stove Request: Delete sms");
     this->reset_pending_query();
     this->send_ok();
     this->state_ = State::STATE_INIT;
@@ -88,7 +95,7 @@ void RikaGSMComponent::parse_stove_request() {
   if (esphome::str_startswith(this->stove_request_, "ATE0") ||
       esphome::str_startswith(this->stove_request_, "AT+CNMI") ||
       esphome::str_startswith(this->stove_request_, "AT+CMGF")) {  // configuration request
-    ESP_LOGW(TAG, "Stove Request: configuration\n\t %s", this->stove_request_.c_str());
+    ESP_LOGV(TAG, "Stove Request: configuration\n\t %s", this->stove_request_.c_str());
     this->send_ok();
     this->state_ = State::STATE_INIT;
     return;

@@ -3,6 +3,7 @@
 #include "esphome/core/component.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/components/time/real_time_clock.h"
+#include "esphome/components/text_sensor/text_sensor.h"
 
 namespace esphome {
 namespace rika_gsm {
@@ -19,6 +20,7 @@ class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
   void set_pin(std::string const &);
   void set_time(time::RealTimeClock *);
   void set_phone_number(std::string const &);
+  void set_raw_status_sensor(text_sensor::TextSensor *);
 
  protected:
   State state_{State::STATE_INIT};
@@ -29,6 +31,8 @@ class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
   bool send_pending_;
   std::string stove_request_;
   bool stove_request_complete_{false};
+  std::string raw_stove_status_;
+  text_sensor::TextSensor *raw_status_sensor_{nullptr};
 
   void parse_stove_request();
   void send_ok();

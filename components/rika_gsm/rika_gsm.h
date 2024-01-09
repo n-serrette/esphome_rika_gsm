@@ -40,6 +40,7 @@ class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
   void send_query();
   void reset_pending_query();
   void reset_stove_request();
+  void set_state(State);
 };
 
 template<typename... Ts> class RikaGsmSendCommandAction : public Action<Ts...> {

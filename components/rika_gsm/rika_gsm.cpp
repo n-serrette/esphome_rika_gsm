@@ -81,6 +81,7 @@ void RikaGSMComponent::parse_stove_request() {
     ESP_LOGV(TAG, "\t writing sms: %s", this->outgoing_message_.c_str());
     this->send_query();
     this->reset_pending_query();
+    this->reset_stove_request();
     this->set_state(State::AWAIT_STOVE_REPLY);
     return;
   }

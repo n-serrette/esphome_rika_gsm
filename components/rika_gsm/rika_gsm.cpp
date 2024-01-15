@@ -92,9 +92,13 @@ void RikaGSMComponent::parse_stove_request() {
     this->set_state(State::STATE_INIT);
     return;
   }
-  if (esphome::str_startswith(this->stove_request_, "ATE0") ||
+  if (esphome::str_startswith(this->stove_request_, "ATE") ||
       esphome::str_startswith(this->stove_request_, "AT+CNMI") ||
-      esphome::str_startswith(this->stove_request_, "AT+CMGF")) {  // configuration request
+      esphome::str_startswith(this->stove_request_, "AT+CMGF") ||
+      esphome::str_startswith(this->stove_request_, "AT+IPR") ||
+      esphome::str_startswith(this->stove_request_, "AT&F") ||
+      esphome::str_startswith(this->stove_request_, "AT\r")
+    ) {  // configuration request
     ESP_LOGV(TAG, "Stove Request: configuration\n\t %s", this->stove_request_.c_str());
     this->send_ok();
     this->set_state(State::STATE_INIT);

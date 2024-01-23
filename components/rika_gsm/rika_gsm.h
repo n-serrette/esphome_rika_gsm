@@ -9,6 +9,8 @@ namespace esphome {
 namespace rika_gsm {
 
 enum State { STATE_INIT = 0, STATE_STOVE_READ, STATE_STOVE_SEND, AWAIT_STOVE_REQUEST, AWAIT_STOVE_REPLY };
+enum AT_Command { AT, ATE, CNMI, CMGF, IPR, ATF, CMGD, CMGR, CMGS, UNKNOWN};
+
 
 class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
  public:
@@ -41,6 +43,8 @@ class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
   void reset_pending_query();
   void reset_stove_request();
   void set_state(State);
+
+  AT_Command parse_command(std::string const &) const;
 };
 
 template<typename... Ts> class RikaGsmSendCommandAction : public Action<Ts...> {

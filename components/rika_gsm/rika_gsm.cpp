@@ -7,9 +7,9 @@ namespace esphome {
 namespace rika_gsm {
 
 static const char *const TAG = "rika_gsm";
-const uint8_t ASCII_CR = 0x0D;
-const uint8_t ASCII_LF = 0x0A;
-const uint8_t ASCII_SUB = 0x1A;
+static constexpr uint8_t ASCII_CR = 0x0D;
+static constexpr uint8_t ASCII_LF = 0x0A;
+static constexpr uint8_t ASCII_SUB = 0x1A;
 
 void RikaGSMComponent::update() {}
 
@@ -25,7 +25,11 @@ void RikaGSMComponent::loop() {
     char byte = this->read();
 
     this->stove_request_ += byte;
-
+    if (this->state_ == State::AWAIT_STOVE_REPLY
+      && (byte == ASCII_SUB)) {
+        this->stove_request_complete_ = true;
+        break;  
+    } 
     if ((byte == ASCII_LF) || (byte == ASCII_SUB) || (byte == ASCII_CR)) {
       this->stove_request_complete_ = true;
       break;
@@ -65,47 +69,53 @@ void RikaGSMComponent::parse_stove_request() {
     this->set_state(State::STATE_INIT);
     return;
   }
-    ESP_LOGI(TAG, "Stove Request: %s", this->stove_request_.c_str());
+  ESP_LOGI(TAG, "Stove Request: %s", this->stove_request_.c_str());
+  AT_Command command = this->parse_command(this->stove_request_);
 
-  if (esphome::str_startswith(this->stove_request_, "AT+CMGR")) {  // the stove wants to read an sms
-    this->set_state(State::STATE_STOVE_READ);
-    ESP_LOGV(TAG, "Stove Request: Read sms");
-    if (!this->send_pending_ || this->outgoing_message_.size() == 0) {
-      ESP_LOGV(TAG, "\t nothing to read");
-      this->send_carriage_return();
+  switch(command) {
+    case AT_Command::CMGR:
+        this->set_state(State::STATE_STOVE_READ);
+        ESP_LOGV(TAG, "Stove Request: Read sms");
+        if (!this->send_pending_ || this->outgoing_message_.size() == 0) {
+          ESP_LOGV(TAG, "\t nothing to read");
+          this->send_carriage_return();
+          this->send_ok();
+          this->set_state(State::STATE_INIT);
+          return;
+        }
+
+        ESP_LOGV(TAG, "\t writing sms: %s", this->outgoing_message_.c_str());
+        this->send_query();
+        this->reset_pending_query();
+        this->reset_stove_request();
+        this->set_state(State::STATE_INIT);
+        return;
+    case AT_Command::CMGS:
+        this->send_carriage_return();
+        this->write_str(">");
+        this->set_state(State::AWAIT_STOVE_REPLY);
+        return;
+    case AT_Command::CMGD:
+        this->reset_pending_query();
+        this->send_ok();
+        this->set_state(State::STATE_INIT);
+        return;
+    case AT_Command::ATE:
+    case AT_Command::AT:
+    case AT_Command::ATF:
+    case AT_Command::CNMI:
+    case AT_Command::CMGF:
+    case AT_Command::IPR:
+      ESP_LOGV(TAG, "Stove Request: configuration\n\t %s", this->stove_request_.c_str());
       this->send_ok();
       this->set_state(State::STATE_INIT);
       return;
-    }
-
-    ESP_LOGV(TAG, "\t writing sms: %s", this->outgoing_message_.c_str());
-    this->send_query();
-    this->reset_pending_query();
-    this->reset_stove_request();
-    this->set_state(State::AWAIT_STOVE_REPLY);
-    return;
+    case AT_Command::UNKNOWN:
+    default:
+      this->send_ok();
+      this->set_state(State::STATE_INIT);
+      return;
   }
-  if (esphome::str_startswith(this->stove_request_, "AT+CMGD")) {  // the stove wants to delete the SMS
-    ESP_LOGV(TAG, "Stove Request: Delete sms");
-    this->reset_pending_query();
-    this->send_ok();
-    this->set_state(State::STATE_INIT);
-    return;
-  }
-  if (esphome::str_startswith(this->stove_request_, "ATE") ||
-      esphome::str_startswith(this->stove_request_, "AT+CNMI") ||
-      esphome::str_startswith(this->stove_request_, "AT+CMGF") ||
-      esphome::str_startswith(this->stove_request_, "AT+IPR") ||
-      esphome::str_startswith(this->stove_request_, "AT&F") ||
-      esphome::str_startswith(this->stove_request_, "AT\r")
-    ) {  // configuration request
-    ESP_LOGV(TAG, "Stove Request: configuration\n\t %s", this->stove_request_.c_str());
-    this->send_ok();
-    this->set_state(State::STATE_INIT);
-    return;
-  }
-  this->set_state(State::STATE_INIT);
-
 }
 
 void RikaGSMComponent::send_ok() {
@@ -149,5 +159,27 @@ void RikaGSMComponent::set_state(State state) {
     ESP_LOGV(TAG, "State: %d", this->state_);
 }
 
+AT_Command RikaGSMComponent::parse_command(std::string const & command) const {
+  if (esphome::str_startswith(command, "AT+CMGR"))
+    return AT_Command::CMGR;
+  if (esphome::str_startswith(command, "AT+CMGS"))
+    return AT_Command::CMGS;
+  if (esphome::str_startswith(command, "AT+CMGD"))
+    return AT_Command::CMGD;
+  if (command == "AT\r")
+    return AT_Command::AT;
+  if (command == "AT&F")
+    return AT_Command::ATF;
+  if (esphome::str_startswith(command, "AT+CNMI"))
+    return AT_Command::CNMI;
+  if (esphome::str_startswith(command, "AT+CMGF"))
+    return AT_Command::CMGF;
+  if (esphome::str_startswith(command, "AT+IPR"))
+    return AT_Command::IPR;
+  if (esphome::str_startswith(command, "ATE"))
+    return AT_Command::ATE;
+
+  return AT_Command::UNKNOWN;
+}
 }  // end namespace rika_gsm
 }  // end namespace esphome

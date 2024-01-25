@@ -16,23 +16,28 @@ void RikaGSMComponent::update() {}
 void RikaGSMComponent::loop() {
   // check state
   if (this->state_ == State::STATE_INIT) {
-    this->reset_stove_request();
-    this->set_state(State::AWAIT_STOVE_REQUEST);
+    this->reset_state();
+    this->set_state(State::READ_STOVE_AT_COMMAND);
   }
 
   // read bytes
   while (this->available()) {
     char byte = this->read();
 
-    this->stove_request_ += byte;
-    if (this->state_ == State::AWAIT_STOVE_REPLY
-      && (byte == ASCII_SUB)) {
-        this->stove_request_complete_ = true;
-        break;  
-    } 
-    if ((byte == ASCII_LF) || (byte == ASCII_SUB) || (byte == ASCII_CR)) {
-      this->stove_request_complete_ = true;
-      break;
+    if (this->state_ == State::READ_STOVE_OUTGOING_SMS) {
+      this->raw_stove_status_ += byte;
+      if ((byte == ASCII_SUB)) {
+        this->set_state(State::STOVE_OUTGOING_SMS_COMPLETE);
+        break;
+      }
+    }
+
+    if (this->state_ == State::READ_STOVE_AT_COMMAND) {
+      this->stove_request_ += byte;
+      if ((byte == ASCII_LF) || (byte == ASCII_SUB) || (byte == ASCII_CR)) {
+        this->set_state(State::STOVE_AT_COMMAND_COMPLETE);
+        break;
+      }
     }
   }
 
@@ -57,16 +62,16 @@ void RikaGSMComponent::set_raw_status_sensor(text_sensor::TextSensor * raw_senso
 }
 
 void RikaGSMComponent::parse_stove_request() {
-  if (!this->stove_request_complete_)
-    return;
-
-  if (this->state_ == State::AWAIT_STOVE_REPLY) {
-    ESP_LOGI(TAG, "Stove Reply: %s", this->stove_request_.c_str());
-    this->raw_stove_status_ = this->stove_request_;
+  if (this->state_ == State::STOVE_OUTGOING_SMS_COMPLETE) {
+    ESP_LOGI(TAG, "Stove Reply: %s", this->raw_stove_status_.c_str());
     if (this->raw_status_sensor_ != nullptr) {
       this->raw_status_sensor_->publish_state(this->raw_stove_status_);
     }
     this->set_state(State::STATE_INIT);
+    return;
+  }
+
+  if (this->state_ != State::STOVE_AT_COMMAND_COMPLETE) {
     return;
   }
   ESP_LOGI(TAG, "Stove Request: %s", this->stove_request_.c_str());
@@ -74,32 +79,31 @@ void RikaGSMComponent::parse_stove_request() {
 
   switch(command) {
     case AT_Command::CMGR:
-        this->set_state(State::STATE_STOVE_READ);
-        ESP_LOGV(TAG, "Stove Request: Read sms");
-        if (!this->send_pending_ || this->outgoing_message_.size() == 0) {
-          ESP_LOGV(TAG, "\t nothing to read");
-          this->send_carriage_return();
-          this->send_ok();
-          this->set_state(State::STATE_INIT);
-          return;
-        }
-
-        ESP_LOGV(TAG, "\t writing sms: %s", this->outgoing_message_.c_str());
-        this->send_query();
-        this->reset_pending_query();
-        this->reset_stove_request();
-        this->set_state(State::STATE_INIT);
-        return;
-    case AT_Command::CMGS:
+      ESP_LOGV(TAG, "Stove Request: Read sms");
+      if (!this->send_pending_ || this->outgoing_message_.size() == 0) {
+        ESP_LOGV(TAG, "\t nothing to read");
         this->send_carriage_return();
-        this->write_str(">");
-        this->set_state(State::AWAIT_STOVE_REPLY);
-        return;
-    case AT_Command::CMGD:
-        this->reset_pending_query();
         this->send_ok();
         this->set_state(State::STATE_INIT);
         return;
+      }
+
+      ESP_LOGV(TAG, "\t writing sms: %s", this->outgoing_message_.c_str());
+      this->send_query();
+      this->reset_pending_query();
+      this->reset_stove_request();
+      this->set_state(State::STATE_INIT);
+      return;
+    case AT_Command::CMGS:
+      this->send_carriage_return();
+      this->write_str(">");
+      this->set_state(State::READ_STOVE_OUTGOING_SMS);
+      return;
+    case AT_Command::CMGD:
+      this->reset_pending_query();
+      this->send_ok();
+      this->set_state(State::STATE_INIT);
+      return;
     case AT_Command::ATE:
     case AT_Command::AT:
     case AT_Command::ATF:
@@ -149,10 +153,7 @@ void RikaGSMComponent::reset_pending_query() {
   this->send_pending_ = false;
 }
 
-void RikaGSMComponent::reset_stove_request() {
-  this->stove_request_ = "";
-  this->stove_request_complete_ = false;
-}
+void RikaGSMComponent::reset_stove_request() { this->stove_request_ = ""; }
 
 void RikaGSMComponent::set_state(State state) {
     this->state_ = state;
@@ -180,6 +181,11 @@ AT_Command RikaGSMComponent::parse_command(std::string const & command) const {
     return AT_Command::ATE;
 
   return AT_Command::UNKNOWN;
+}
+
+void RikaGSMComponent::reset_state() {
+  this->reset_stove_request();
+  this->raw_stove_status_ = "";
 }
 }  // end namespace rika_gsm
 }  // end namespace esphome

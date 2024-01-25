@@ -8,7 +8,13 @@
 namespace esphome {
 namespace rika_gsm {
 
-enum State { STATE_INIT = 0, STATE_STOVE_READ, STATE_STOVE_SEND, AWAIT_STOVE_REQUEST, AWAIT_STOVE_REPLY };
+enum State {
+  STATE_INIT = 0,
+  READ_STOVE_AT_COMMAND,
+  STOVE_AT_COMMAND_COMPLETE,
+  READ_STOVE_OUTGOING_SMS,
+  STOVE_OUTGOING_SMS_COMPLETE
+};
 enum AT_Command { AT, ATE, CNMI, CMGF, IPR, ATF, CMGD, CMGR, CMGS, UNKNOWN};
 
 
@@ -32,7 +38,6 @@ class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
   std::string outgoing_message_;
   bool send_pending_;
   std::string stove_request_;
-  bool stove_request_complete_{false};
   std::string raw_stove_status_;
   text_sensor::TextSensor *raw_status_sensor_{nullptr};
 
@@ -43,6 +48,7 @@ class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
   void reset_pending_query();
   void reset_stove_request();
   void set_state(State);
+  void reset_state();
 
   AT_Command parse_command(std::string const &) const;
 };

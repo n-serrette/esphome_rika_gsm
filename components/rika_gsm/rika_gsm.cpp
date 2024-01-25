@@ -11,8 +11,6 @@ static constexpr uint8_t ASCII_CR = 0x0D;
 static constexpr uint8_t ASCII_LF = 0x0A;
 static constexpr uint8_t ASCII_SUB = 0x1A;
 
-void RikaGSMComponent::update() {}
-
 void RikaGSMComponent::loop() {
   // check state
   if (this->state_ == State::STATE_INIT) {
@@ -41,10 +39,17 @@ void RikaGSMComponent::loop() {
     }
   }
 
-  this->parse_stove_request();
+  this->update();
 }
 
-void RikaGSMComponent::dump_config() {}
+void RikaGSMComponent::dump_config() {
+  ESP_LOGCONFIG(TAG, "rika_gsm:");
+  ESP_LOGCONFIG(TAG, "  pin: %s", this->pin_.c_str());
+  ESP_LOGCONFIG(TAG, "  phone_number: %s", this->phone_number_.c_str());
+  if (this->raw_status_sensor_ != nullptr) {
+    LOG_TEXT_SENSOR("  ", "raw_status", this->raw_status_sensor_);
+  }
+}
 
 void RikaGSMComponent::send_sms(std::string const &message) {
   this->pending_sms_command_ = message;
@@ -61,7 +66,7 @@ void RikaGSMComponent::set_raw_status_sensor(text_sensor::TextSensor * raw_senso
   this->raw_status_sensor_ = raw_sensor;
 }
 
-void RikaGSMComponent::parse_stove_request() {
+void RikaGSMComponent::update() {
   if (this->state_ == State::STOVE_OUTGOING_SMS_COMPLETE) {
     ESP_LOGI(TAG, "Stove Reply: %s", this->raw_stove_status_.c_str());
     if (this->raw_status_sensor_ != nullptr) {

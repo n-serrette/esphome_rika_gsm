@@ -35,7 +35,7 @@ class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
   std::string pin_;
   std::string phone_number_;
   time::RealTimeClock *time_;
-  std::string outgoing_message_;
+  std::string pending_sms_command_;
   bool send_pending_;
   std::string stove_request_;
   std::string raw_stove_status_;

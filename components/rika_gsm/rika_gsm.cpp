@@ -47,7 +47,7 @@ void RikaGSMComponent::loop() {
 void RikaGSMComponent::dump_config() {}
 
 void RikaGSMComponent::send_sms(std::string const &message) {
-  this->outgoing_message_ = message;
+  this->pending_sms_command_ = message;
   this->send_pending_ = true;
 }
 
@@ -80,7 +80,7 @@ void RikaGSMComponent::parse_stove_request() {
   switch(command) {
     case AT_Command::CMGR:
       ESP_LOGV(TAG, "Stove Request: Read sms");
-      if (!this->send_pending_ || this->outgoing_message_.size() == 0) {
+      if (!this->send_pending_ || this->pending_sms_command_.size() == 0) {
         ESP_LOGV(TAG, "\t nothing to read");
         this->send_carriage_return();
         this->send_ok();
@@ -88,7 +88,7 @@ void RikaGSMComponent::parse_stove_request() {
         return;
       }
 
-      ESP_LOGV(TAG, "\t writing sms: %s", this->outgoing_message_.c_str());
+      ESP_LOGV(TAG, "\t writing sms: %s", this->pending_sms_command_.c_str());
       this->send_query();
       this->reset_pending_query();
       this->reset_stove_request();
@@ -142,14 +142,14 @@ void RikaGSMComponent::send_query() {
   this->send_carriage_return();
   this->write_str(this->pin_.c_str());
   this->write_str(" ");
-  this->write_str(this->outgoing_message_.c_str());
+  this->write_str(this->pending_sms_command_.c_str());
   this->send_carriage_return();
   this->send_carriage_return();
   this->send_ok();
 }
 
 void RikaGSMComponent::reset_pending_query() {
-  this->outgoing_message_ = "";
+  this->pending_sms_command_ = "";
   this->send_pending_ = false;
 }
 

@@ -1,2 +1,6 @@
 # esphome_rika_gsm
-emulating rika gsm model with esphome
+Emulating rika gsm modem with esphome
+
+## WARNING
+
+This project is still in early development and has not been tested.

@@ -50,6 +50,7 @@ class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
   void reset_state();
 
   AT_Command parse_command(std::string const &) const;
+  std::string state_to_string(State) const;
 };
 
 template<typename... Ts> class RikaGsmSendCommandAction : public Action<Ts...> {

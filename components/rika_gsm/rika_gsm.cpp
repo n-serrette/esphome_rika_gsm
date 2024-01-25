@@ -68,7 +68,7 @@ void RikaGSMComponent::set_raw_status_sensor(text_sensor::TextSensor * raw_senso
 
 void RikaGSMComponent::update() {
   if (this->state_ == State::STOVE_OUTGOING_SMS_COMPLETE) {
-    ESP_LOGI(TAG, "Stove Reply: %s", this->raw_stove_status_.c_str());
+    ESP_LOGV(TAG, "Stove Reply: %s", this->raw_stove_status_.c_str());
     if (this->raw_status_sensor_ != nullptr) {
       this->raw_status_sensor_->publish_state(this->raw_stove_status_);
     }
@@ -79,7 +79,7 @@ void RikaGSMComponent::update() {
   if (this->state_ != State::STOVE_AT_COMMAND_COMPLETE) {
     return;
   }
-  ESP_LOGI(TAG, "Stove Request: %s", this->stove_request_.c_str());
+  ESP_LOGV(TAG, "Stove Request: %s", this->stove_request_.c_str());
   AT_Command command = this->parse_command(this->stove_request_);
 
   switch(command) {
@@ -162,7 +162,12 @@ void RikaGSMComponent::reset_stove_request() { this->stove_request_ = ""; }
 
 void RikaGSMComponent::set_state(State state) {
     this->state_ = state;
-    ESP_LOGV(TAG, "State: %d", this->state_);
+    ESP_LOGD(TAG, "State: %s", this->state_to_string(this->state_).c_str());
+}
+
+void RikaGSMComponent::reset_state() {
+  this->reset_stove_request();
+  this->raw_stove_status_ = "";
 }
 
 AT_Command RikaGSMComponent::parse_command(std::string const & command) const {
@@ -188,9 +193,21 @@ AT_Command RikaGSMComponent::parse_command(std::string const & command) const {
   return AT_Command::UNKNOWN;
 }
 
-void RikaGSMComponent::reset_state() {
-  this->reset_stove_request();
-  this->raw_stove_status_ = "";
+std::string RikaGSMComponent::state_to_string(State state) const {
+  switch (state) {
+    case State::STATE_INIT:
+      return "STATE_INIT";
+    case State::READ_STOVE_AT_COMMAND:
+      return "READ_STOVE_AT_COMMAND";
+    case State::STOVE_AT_COMMAND_COMPLETE:
+      return "STOVE_AT_COMMAND_COMPLETE";
+    case State::READ_STOVE_OUTGOING_SMS:
+      return "READ_STOVE_OUTGOING_SMS";
+    case State::STOVE_OUTGOING_SMS_COMPLETE:
+      return "STOVE_OUTGOING_SMS_COMPLETE";
+  }
+  return "UNKNOWN_STATE";
 }
+
 }  // end namespace rika_gsm
 }  // end namespace esphome

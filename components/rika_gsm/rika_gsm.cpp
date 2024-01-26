@@ -26,7 +26,7 @@ void RikaGSMComponent::loop() {
       this->raw_stove_status_ += byte;
       if ((byte == ASCII_SUB)) {
         this->set_state(State::STOVE_OUTGOING_SMS_COMPLETE);
-        ESP_LOGV(TAG, this->raw_stove_status_.c_str());
+        ESP_LOGD(TAG, this->raw_stove_status_.c_str());
         break;
       }
     }
@@ -35,7 +35,7 @@ void RikaGSMComponent::loop() {
       this->stove_request_ += byte;
       if ((byte == ASCII_LF) || (byte == ASCII_SUB) || (byte == ASCII_CR)) {
         this->set_state(State::STOVE_AT_COMMAND_COMPLETE);
-        ESP_LOGV(TAG, this->stove_request_.c_str());
+        ESP_LOGD(TAG, this->stove_request_.c_str());
         break;
       }
     }
@@ -81,9 +81,8 @@ void RikaGSMComponent::update() {
   if (this->state_ != State::STOVE_AT_COMMAND_COMPLETE) {
     return;
   }
-  ESP_LOGV(TAG, "Stove Request: %s", this->stove_request_.c_str());
   AT_Command command = this->parse_command(this->stove_request_);
-  ESP_LOGV(TAG, "Stove Request: %d", command);
+  ESP_LOGD(TAG, "Command %s: %d", this->stove_request_.c_str(), command);
 
   switch(command) {
     case AT_Command::CMGR:

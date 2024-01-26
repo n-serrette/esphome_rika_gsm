@@ -24,21 +24,21 @@ void RikaGSMComponent::loop() {
     ESP_LOGD(TAG, "char read %c", byte);
 
     if (this->state_ == State::READ_STOVE_OUTGOING_SMS) {
-      this->raw_stove_status_ += byte;
       if ((byte == ASCII_SUB)) {
         this->set_state(State::STOVE_OUTGOING_SMS_COMPLETE);
         ESP_LOGD(TAG, this->raw_stove_status_.c_str());
         break;
       }
+      this->raw_stove_status_ += byte;
     }
 
     if (this->state_ == State::READ_STOVE_AT_COMMAND) {
-      this->stove_request_ += byte;
       if ((byte == ASCII_LF) || (byte == ASCII_SUB) || (byte == ASCII_CR)) {
         this->set_state(State::STOVE_AT_COMMAND_COMPLETE);
         ESP_LOGD(TAG, this->stove_request_.c_str());
         break;
       }
+      this->stove_request_ += byte;
     }
   }
 
@@ -181,7 +181,7 @@ AT_Command RikaGSMComponent::parse_command(std::string const & command) const {
     return AT_Command::CMGS;
   if (esphome::str_startswith(command, "AT+CMGD"))
     return AT_Command::CMGD;
-  if (command == "AT\r")
+  if (command == "AT")
     return AT_Command::AT;
   if (command == "AT&F")
     return AT_Command::ATF;

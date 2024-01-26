@@ -21,6 +21,7 @@ void RikaGSMComponent::loop() {
   // read bytes
   while (this->available()) {
     char byte = this->read();
+    ESP_LOGD(TAG, "char read %c", byte);
 
     if (this->state_ == State::READ_STOVE_OUTGOING_SMS) {
       this->raw_stove_status_ += byte;

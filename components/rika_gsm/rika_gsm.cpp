@@ -145,7 +145,8 @@ void RikaGSMComponent::send_query() {
   this->write_str("+CMGR: \"REC UNREAD\",\"");
   this->write_str(this->phone_number_.c_str());
   this->write_str("\",,\"");
-  this->write_str(this->time_->now().strftime("%y/%m/%d,%X+0").c_str());
+  // this->write_str(this->time_->now().strftime("%y/%m/%d,%X+0").c_str());
+  this->write_str("70/01/01,01:00:00+0");
   this->write_str("\"");
   this->send_carriage_return();
   this->write_str(this->pin_.c_str());

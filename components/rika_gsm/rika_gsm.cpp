@@ -68,6 +68,10 @@ void RikaGSMComponent::set_raw_status_sensor(text_sensor::TextSensor * raw_senso
   this->raw_status_sensor_ = raw_sensor;
 }
 
+void RikaGSMComponent::set_gsm_status_binary_sensor(binary_sensor::BinarySensor * gsm_sensor) {
+  this->gsm_status_sensor_ = gsm_sensor;
+}
+
 void RikaGSMComponent::update() {
   if (this->state_ == State::STOVE_OUTGOING_SMS_COMPLETE) {
     ESP_LOGV(TAG, "Stove Reply: %s", this->raw_stove_status_.c_str());
@@ -83,6 +87,13 @@ void RikaGSMComponent::update() {
   }
   AT_Command command = this->parse_command(this->stove_request_);
   ESP_LOGD(TAG, "Command %s: %d", this->stove_request_.c_str(), command);
+
+  if (!this->gsm_status_) {
+    this->gsm_status_ = true;
+    if (this->gsm_status_sensor_ != nullptr) {
+      this->gsm_status_sensor_->publish_state(this->gsm_status_);
+    }
+  }
 
   switch(command) {
     case AT_Command::CMGR:
@@ -103,7 +114,7 @@ void RikaGSMComponent::update() {
       return;
     case AT_Command::CMGS:
       this->send_carriage_return();
-      this->write_str(">");
+      this->write_str("> ");
       this->set_state(State::READ_STOVE_OUTGOING_SMS);
       return;
     case AT_Command::CMGD:

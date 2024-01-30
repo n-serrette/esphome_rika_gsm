@@ -38,6 +38,11 @@ text_sensor:
     raw_status:
       name: "Stove raw status"
 
+binary_sensor:
+  - platform: rika_gsm
+    gsm_status:
+      name: "GSM status"
+
 api:
   encryption:
     key: !secret api_encryption_key

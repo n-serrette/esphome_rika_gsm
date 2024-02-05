@@ -168,7 +168,7 @@ void RikaGSMComponent::send_carriage_return() {
 // }
 
 void RikaGSMComponent::send_query() {
-  std::string query = "\r\n+CMGR: \"REC UNREAD\",\"";
+  std::string query = "\r\nAT+CMGR: \"REC UNREAD\",\"";
   query += this->phone_number_;
   query += "\",,\"70/01/01,01:00:00+0\"\r\n";
   query += this->pin_;

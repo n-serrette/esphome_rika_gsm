@@ -86,7 +86,7 @@ void RikaGSMComponent::update() {
     return;
   }
   AT_Command command = this->parse_command(this->stove_request_);
-  ESP_LOGD(TAG, "Command %s: %d", this->stove_request_.c_str(), command);
+  ESP_LOGV(TAG, "Command %s: %d", this->stove_request_.c_str(), command);
 
   if (!this->gsm_status_) {
     this->gsm_status_ = true;
@@ -168,14 +168,14 @@ void RikaGSMComponent::send_carriage_return() {
 // }
 
 void RikaGSMComponent::send_query() {
-  std::string query = "\r\nAT+CMGR: \"REC UNREAD\",\"";
+  std::string query = "\r\nCMGR: \"REC UNREAD\",\"";
   query += this->phone_number_;
   query += "\",,\"70/01/01,01:00:00+0\"\r\n";
   query += this->pin_;
   query += " ";
   query += this->pending_sms_command_;
   query += "\r\n\r\nOK\r\n";
-  ESP_LOGD(TAG, "sms: %s", query.c_str());
+  ESP_LOGV(TAG, "sms: %s", query.c_str());
   this->write_str(query.c_str());
 }
 
@@ -188,7 +188,7 @@ void RikaGSMComponent::reset_stove_request() { this->stove_request_ = ""; }
 
 void RikaGSMComponent::set_state(State state) {
     this->state_ = state;
-    ESP_LOGD(TAG, "State: %s", this->state_to_string(this->state_).c_str());
+    ESP_LOGV(TAG, "State: %s", this->state_to_string(this->state_).c_str());
 }
 
 void RikaGSMComponent::reset_state() {

@@ -3,7 +3,9 @@
 #include "esphome/core/component.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/components/time/real_time_clock.h"
+#ifdef USE_TEXT_SENSOR
 #include "esphome/components/text_sensor/text_sensor.h"
+#endif
 #ifdef USE_BINARY_SENSOR
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #endif
@@ -31,7 +33,9 @@ class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
   void set_pin(std::string const &);
   void set_time(time::RealTimeClock *);
   void set_phone_number(std::string const &);
+#ifdef USE_TEXT_SENSOR
   void set_raw_status_sensor(text_sensor::TextSensor *);
+#endif
 #ifdef USE_BINARY_SENSOR
   void set_gsm_status_binary_sensor(binary_sensor::BinarySensor *);
 #endif
@@ -45,7 +49,9 @@ class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
   bool send_pending_;
   std::string stove_request_;
   std::string raw_stove_status_;
+#ifdef USE_TEXT_SENSOR
   text_sensor::TextSensor *raw_status_sensor_{nullptr};
+#endif
   bool gsm_status_{false};
   uint32_t last_stove_request_{0};
 #ifdef USE_BINARY_SENSOR

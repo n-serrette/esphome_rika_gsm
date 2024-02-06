@@ -48,9 +48,11 @@ void RikaGSMComponent::dump_config() {
   ESP_LOGCONFIG(TAG, "rika_gsm:");
   ESP_LOGCONFIG(TAG, "  pin: %s", this->pin_.c_str());
   ESP_LOGCONFIG(TAG, "  phone_number: %s", this->phone_number_.c_str());
+#ifdef USE_TEXT_SENSOR
   if (this->raw_status_sensor_ != nullptr) {
     LOG_TEXT_SENSOR("  ", "raw_status", this->raw_status_sensor_);
   }
+#endif
 }
 
 void RikaGSMComponent::send_sms(std::string const &message) {
@@ -64,9 +66,11 @@ void RikaGSMComponent::set_phone_number(std::string const &number) { this->phone
 
 void RikaGSMComponent::set_time(time::RealTimeClock *time) { this->time_ = time; }
 
+#ifdef USE_TEXT_SENSOR
 void RikaGSMComponent::set_raw_status_sensor(text_sensor::TextSensor * raw_sensor) {
   this->raw_status_sensor_ = raw_sensor;
 }
+#endif
 
 #ifdef USE_BINARY_SENSOR
 void RikaGSMComponent::set_gsm_status_binary_sensor(binary_sensor::BinarySensor * gsm_sensor) {
@@ -89,9 +93,11 @@ void RikaGSMComponent::update() {
 
   if (this->state_ == State::STOVE_OUTGOING_SMS_COMPLETE) {
     ESP_LOGV(TAG, "Stove Reply: %s", this->raw_stove_status_.c_str());
+#ifdef USE_TEXT_SENSOR
     if (this->raw_status_sensor_ != nullptr) {
       this->raw_status_sensor_->publish_state(this->raw_stove_status_);
     }
+#endif
     this->set_state(State::STATE_INIT);
     return;
   }

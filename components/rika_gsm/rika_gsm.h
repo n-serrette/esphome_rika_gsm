@@ -4,7 +4,9 @@
 #include "esphome/components/uart/uart.h"
 #include "esphome/components/time/real_time_clock.h"
 #include "esphome/components/text_sensor/text_sensor.h"
+#ifdef USE_BINARY_SENSOR
 #include "esphome/components/binary_sensor/binary_sensor.h"
+#endif
 
 namespace esphome {
 namespace rika_gsm {
@@ -30,7 +32,9 @@ class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
   void set_time(time::RealTimeClock *);
   void set_phone_number(std::string const &);
   void set_raw_status_sensor(text_sensor::TextSensor *);
+#ifdef USE_BINARY_SENSOR
   void set_gsm_status_binary_sensor(binary_sensor::BinarySensor *);
+#endif
 
  protected:
   State state_{State::STATE_INIT};
@@ -44,8 +48,9 @@ class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
   text_sensor::TextSensor *raw_status_sensor_{nullptr};
   bool gsm_status_{false};
   uint32_t last_stove_request_{0};
+#ifdef USE_BINARY_SENSOR
   binary_sensor::BinarySensor *gsm_status_sensor_{nullptr};
-
+#endif
   void send_ok();
   void send_carriage_return();
   void send_query();

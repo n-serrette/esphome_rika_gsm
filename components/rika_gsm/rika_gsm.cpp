@@ -68,9 +68,11 @@ void RikaGSMComponent::set_raw_status_sensor(text_sensor::TextSensor * raw_senso
   this->raw_status_sensor_ = raw_sensor;
 }
 
+#ifdef USE_BINARY_SENSOR
 void RikaGSMComponent::set_gsm_status_binary_sensor(binary_sensor::BinarySensor * gsm_sensor) {
   this->gsm_status_sensor_ = gsm_sensor;
 }
+#endif
 
 void RikaGSMComponent::update() {
   uint32_t current_timestamp = millis();
@@ -78,9 +80,11 @@ void RikaGSMComponent::update() {
   if (this->gsm_status_
     && (current_timestamp - this->last_stove_request_) > (10 * 1000)) {
     this->gsm_status_ = false;
+#ifdef USE_BINARY_SENSOR
     if (this->gsm_status_sensor_ != nullptr) {
       this->gsm_status_sensor_->publish_state(this->gsm_status_);
     }
+#endif
   }
 
   if (this->state_ == State::STOVE_OUTGOING_SMS_COMPLETE) {
@@ -102,9 +106,11 @@ void RikaGSMComponent::update() {
   this->last_stove_request_ = current_timestamp;
   if (!this->gsm_status_) {
     this->gsm_status_ = true;
+#ifdef USE_BINARY_SENSOR
     if (this->gsm_status_sensor_ != nullptr) {
       this->gsm_status_sensor_->publish_state(this->gsm_status_);
     }
+#endif
   }
 
   switch(command) {

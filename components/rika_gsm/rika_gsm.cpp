@@ -108,8 +108,7 @@ void RikaGSMComponent::update() {
 
       ESP_LOGV(TAG, "\t writing sms: %s", this->pending_sms_command_.c_str());
       this->send_query();
-      this->reset_pending_query();
-      this->reset_stove_request();
+      // this->reset_stove_request();
       this->set_state(State::STATE_INIT);
       return;
     case AT_Command::CMGS:
@@ -150,33 +149,21 @@ void RikaGSMComponent::send_carriage_return() {
   this->write_byte(ASCII_LF);
 }
 
-// void RikaGSMComponent::send_query() {
-//   this->send_carriage_return();
-//   this->write_str("+CMGR: \"REC UNREAD\",\"");
-//   this->write_str(this->phone_number_.c_str());
-//   this->write_str("\",,\"");
-//   // this->write_str(this->time_->now().strftime("%y/%m/%d,%X+0").c_str());
-//   this->write_str("70/01/01,01:00:00+0");
-//   this->write_str("\"");
-//   this->send_carriage_return();
-//   this->write_str(this->pin_.c_str());
-//   this->write_str(" ");
-//   this->write_str(this->pending_sms_command_.c_str());
-//   this->send_carriage_return();
-//   this->send_carriage_return();
-//   this->send_ok();
-// }
-
 void RikaGSMComponent::send_query() {
-  std::string query = "\r\nCMGR: \"REC UNREAD\",\"";
-  query += this->phone_number_;
-  query += "\",,\"70/01/01,01:00:00+0\"\r\n";
-  query += this->pin_;
-  query += " ";
-  query += this->pending_sms_command_;
-  query += "\r\n\r\nOK\r\n";
-  ESP_LOGV(TAG, "sms: %s", query.c_str());
-  this->write_str(query.c_str());
+  this->send_carriage_return();
+  this->write_str("+CMGR:\"REC READ\",\"");
+  this->write_str(this->phone_number_.c_str());
+  this->write_str("\",,\"");
+  // this->write_str(this->time_->now().strftime("%y/%m/%d,%X+0").c_str());
+  this->write_str("70/01/01,01:00:00+0");
+  this->write_str("\"");
+  this->send_carriage_return();
+  this->write_str(this->pin_.c_str());
+  this->write_str(" ");
+  this->write_str(this->pending_sms_command_.c_str());
+  this->send_carriage_return();
+  this->send_carriage_return();
+  this->send_ok();
 }
 
 void RikaGSMComponent::reset_pending_query() {

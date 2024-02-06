@@ -73,6 +73,16 @@ void RikaGSMComponent::set_gsm_status_binary_sensor(binary_sensor::BinarySensor 
 }
 
 void RikaGSMComponent::update() {
+  uint32_t current_timestamp = millis();
+
+  if (this->gsm_status_
+    && (current_timestamp - this->last_stove_request_) > (10 * 1000)) {
+    this->gsm_status_ = false;
+    if (this->gsm_status_sensor_ != nullptr) {
+      this->gsm_status_sensor_->publish_state(this->gsm_status_);
+    }
+  }
+
   if (this->state_ == State::STOVE_OUTGOING_SMS_COMPLETE) {
     ESP_LOGV(TAG, "Stove Reply: %s", this->raw_stove_status_.c_str());
     if (this->raw_status_sensor_ != nullptr) {
@@ -85,9 +95,11 @@ void RikaGSMComponent::update() {
   if (this->state_ != State::STOVE_AT_COMMAND_COMPLETE) {
     return;
   }
+
   AT_Command command = this->parse_command(this->stove_request_);
   ESP_LOGV(TAG, "Command %s: %d", this->stove_request_.c_str(), command);
 
+  this->last_stove_request_ = current_timestamp;
   if (!this->gsm_status_) {
     this->gsm_status_ = true;
     if (this->gsm_status_sensor_ != nullptr) {

@@ -43,6 +43,7 @@ class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
   std::string raw_stove_status_;
   text_sensor::TextSensor *raw_status_sensor_{nullptr};
   bool gsm_status_{false};
+  uint32_t last_stove_request_{0};
   binary_sensor::BinarySensor *gsm_status_sensor_{nullptr};
 
   void send_ok();

@@ -64,8 +64,6 @@ void RikaGSMComponent::set_pin(std::string const &pin) { this->pin_ = pin; }
 
 void RikaGSMComponent::set_phone_number(std::string const &number) { this->phone_number_ = number; }
 
-void RikaGSMComponent::set_time(time::RealTimeClock *time) { this->time_ = time; }
-
 #ifdef USE_TEXT_SENSOR
 void RikaGSMComponent::set_raw_status_sensor(text_sensor::TextSensor * raw_sensor) {
   this->raw_status_sensor_ = raw_sensor;
@@ -132,7 +130,6 @@ void RikaGSMComponent::update() {
 
       ESP_LOGV(TAG, "\t writing sms: %s", this->pending_sms_command_.c_str());
       this->send_query();
-      // this->reset_stove_request();
       this->set_state(State::STATE_INIT);
       return;
     case AT_Command::CMGS:
@@ -178,7 +175,6 @@ void RikaGSMComponent::send_query() {
   this->write_str("+CMGR:\"REC READ\",\"");
   this->write_str(this->phone_number_.c_str());
   this->write_str("\",,\"");
-  // this->write_str(this->time_->now().strftime("%y/%m/%d,%X+0").c_str());
   this->write_str("70/01/01,01:00:00+0");
   this->write_str("\"");
   this->send_carriage_return();

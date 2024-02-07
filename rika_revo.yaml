@@ -13,11 +13,6 @@ wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
 
-# At least one time source is required
-time:
-  - platform: homeassistant
-    id: homeassistant_time
-
 logger:
   level: VERBOSE #makes uart stream available in esphome logstream
   baud_rate: 0 #disable logging over uart

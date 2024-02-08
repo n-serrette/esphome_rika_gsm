@@ -19,8 +19,7 @@ enum State {
   READ_STOVE_OUTGOING_SMS,
   STOVE_OUTGOING_SMS_COMPLETE
 };
-enum AT_Command { AT, ATE, CNMI, CMGF, IPR, ATF, CMGD, CMGR, CMGS, UNKNOWN};
-
+enum AT_Command { AT, ATE, CNMI, CMGF, IPR, ATF, CMGD, CMGR, CMGS, UNKNOWN };
 
 class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
  public:

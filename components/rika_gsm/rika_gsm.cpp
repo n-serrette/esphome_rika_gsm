@@ -65,13 +65,13 @@ void RikaGSMComponent::set_pin(std::string const &pin) { this->pin_ = pin; }
 void RikaGSMComponent::set_phone_number(std::string const &number) { this->phone_number_ = number; }
 
 #ifdef USE_TEXT_SENSOR
-void RikaGSMComponent::set_raw_status_sensor(text_sensor::TextSensor * raw_sensor) {
+void RikaGSMComponent::set_raw_status_sensor(text_sensor::TextSensor *raw_sensor) {
   this->raw_status_sensor_ = raw_sensor;
 }
 #endif
 
 #ifdef USE_BINARY_SENSOR
-void RikaGSMComponent::set_gsm_status_binary_sensor(binary_sensor::BinarySensor * gsm_sensor) {
+void RikaGSMComponent::set_gsm_status_binary_sensor(binary_sensor::BinarySensor *gsm_sensor) {
   this->gsm_status_sensor_ = gsm_sensor;
 }
 #endif
@@ -79,8 +79,7 @@ void RikaGSMComponent::set_gsm_status_binary_sensor(binary_sensor::BinarySensor 
 void RikaGSMComponent::update() {
   uint32_t current_timestamp = millis();
 
-  if (this->gsm_status_
-    && (current_timestamp - this->last_stove_request_) > (10 * 1000)) {
+  if (this->gsm_status_ && (current_timestamp - this->last_stove_request_) > (10 * 1000)) {
     this->gsm_status_ = false;
 #ifdef USE_BINARY_SENSOR
     if (this->gsm_status_sensor_ != nullptr) {
@@ -117,7 +116,7 @@ void RikaGSMComponent::update() {
 #endif
   }
 
-  switch(command) {
+  switch (command) {
     case AT_Command::CMGR:
       ESP_LOGV(TAG, "Stove Request: Read sms");
       if (!this->send_pending_ || this->pending_sms_command_.size() == 0) {
@@ -194,8 +193,8 @@ void RikaGSMComponent::reset_pending_query() {
 void RikaGSMComponent::reset_stove_request() { this->stove_request_ = ""; }
 
 void RikaGSMComponent::set_state(State state) {
-    this->state_ = state;
-    ESP_LOGV(TAG, "State: %s", this->state_to_string(this->state_).c_str());
+  this->state_ = state;
+  ESP_LOGV(TAG, "State: %s", this->state_to_string(this->state_).c_str());
 }
 
 void RikaGSMComponent::reset_state() {
@@ -203,7 +202,7 @@ void RikaGSMComponent::reset_state() {
   this->raw_stove_status_ = "";
 }
 
-AT_Command RikaGSMComponent::parse_command(std::string const & command) const {
+AT_Command RikaGSMComponent::parse_command(std::string const &command) const {
   if (esphome::str_startswith(command, "AT+CMGR"))
     return AT_Command::CMGR;
   if (esphome::str_startswith(command, "AT+CMGS"))

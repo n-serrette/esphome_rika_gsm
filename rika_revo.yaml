@@ -18,13 +18,18 @@ logger:
   baud_rate: 0 #disable logging over uart
 
 uart:
-  id: rika_uart_bus
-  tx_pin: GPIO16
-  rx_pin: GPIO17
-  baud_rate: 38400
+  - id: rika_gsm_uart_bus
+    tx_pin: GPIO16
+    rx_pin: GPIO17
+    baud_rate: 38400
+  - id: rika_temp_uart_bus
+    tx_pin: GPIO1
+    rx_pin: GPIO3
+    baud_rate: 38400
 
 rika_gsm:
   id: ria_gsm_component_1
+  uart_id: rika_gsm_uart_bus
   pin: "1234"
   # phone_number: "+33685967412"
 
@@ -37,6 +42,11 @@ binary_sensor:
   - platform: rika_gsm
     gsm_status:
       name: "GSM status"
+
+rika_temperature:
+  id: rika_temperature_component_1
+  uart_id: rika_temp_uart_bus
+  
 
 api:
   encryption:

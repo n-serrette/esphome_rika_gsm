@@ -22,7 +22,8 @@ void RikaTemperatureComponent::loop() {
       this->read_buffer_ = "";
     }
   }
-  ESP_LOGD(TAG, this->read_buffer_.c_str());
+  if (this->read_buffer_.size() > 0)
+    ESP_LOGD(TAG, this->read_buffer_.c_str());
 }
 
 void RikaTemperatureComponent::dump_config() {}

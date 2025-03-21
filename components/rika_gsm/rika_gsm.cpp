@@ -166,7 +166,7 @@ void RikaGSMComponent::send_ok() {
 
 void RikaGSMComponent::send_carriage_return() {
   this->write_byte(ASCII_CR);
-  this->write_byte(ASCII_LF);
+  // this->write_byte(ASCII_LF);
 }
 
 void RikaGSMComponent::send_query() {
